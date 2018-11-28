@@ -3,12 +3,9 @@
 # NOTE: Can be overridden externally.
 #
 
-# En/disable usage of maplemini bootloader support
-USE_MAPLEMINI_BOOTLOADER ?= 1
-
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16 -DUSE_MAPLEMINI_BOOTLOADER=${USE_MAPLEMINI_BOOTLOADER}
+  USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -105,11 +102,7 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 
 # Define linker script file here
-ifeq ($(USE_MAPLEMINI_BOOTLOADER),1)
-  LDSCRIPT = $(STARTUPLD)/STM32F103xB_maplemini_bootloader.ld
-else
-  LDSCRIPT = $(STARTUPLD)/STM32F103xB.ld
-endif
+LDSCRIPT = $(STARTUPLD)/STM32F103x8.ld
 
 include project.mk
 
@@ -208,9 +201,6 @@ CPPWARN = -Wall -Wextra -Wundef
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS =
-ifeq ($(USE_MAPLEMINI_BOOTLOADER),1)
-  UDEFS += -DCORTEX_VTOR_INIT=0x5000
-endif
 
 # Define ASM defines here
 UADEFS =
