@@ -18,8 +18,6 @@ typedef void *  i2c_module_t;
   #define ETIMEOUT  101
 #endif
 
-i2c_module_t    i2c_init ( I2CDriver *dr );
-void            i2c_free ( void );
 
 int         i2c_get_errno   ( i2c_module_t p_module );
 
