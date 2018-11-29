@@ -63,7 +63,7 @@ int i2c_read_bytes( i2c_module_t p_module, uint8_t i2c_address, uint8_t reg_addr
     i2cAcquireBus( p_module );
     msg_t msg = i2cMasterTransmitTimeout( p_module, i2c_address, &reg_addr, 1, data, size, MS2ST(I2C_TIMEOUT_MS) );
     i2cReleaseBus( p_module );
-    chprintf( debug_str, "Err %x\n", msg );
+
     if ( msg != MSG_OK )
         return EFAULT;
 

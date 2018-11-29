@@ -28,21 +28,9 @@ static THD_FUNCTION(ReceiverIMU, arg)
 {
     arg = arg;
 
-    /* Init I2C */
-    i2cStart(imu_bus, &i2cfg1);
-
-    palSetPadMode( GPIOB, 6, PAL_MODE_OUTPUT_OPENDRAIN );
-    palSetPadMode( GPIOB, 7, PAL_MODE_OUTPUT_OPENDRAIN );
-
-    imu_mod = i2c_init( imu_bus );
-
-    adxl345_init( imu_mod );
-
     while (true)
     {
-        chprintf( debug_str, "My ID: 0%x\n", adxl345_get_self_id() );
-
-        chThdSleepSeconds(1);
+        chThdSleepMilliseconds(100);
     }
 }
 
@@ -63,23 +51,23 @@ int main(void)
 
     palSetPadMode( GPIOC, 13, PAL_MODE_OUTPUT_PUSHPULL );
 
-    chThdCreateStatic(waReceiverIMU, sizeof(waReceiverIMU), NORMALPRIO, ReceiverIMU, NULL /* arg is NULL */);
+    /* Init I2C */
+    i2cStart( imu_bus, &i2cfg1 );
+
+    palSetPadMode( GPIOB, 6, PAL_MODE_STM32_ALTERNATE_OPENDRAIN );
+    palSetPadMode( GPIOB, 7, PAL_MODE_STM32_ALTERNATE_OPENDRAIN );
+
+    imu_mod = i2c_init( imu_bus );
+
+    adxl345_init( imu_mod );
 
     while (true)
     {
         palTogglePad( GPIOC, 13 );
+        uint8_t id = adxl345_get_self_id();
 
-        if ( serusbcfg.usbp->state == USB_ACTIVE )
-        {
-//            chprintf( debug_str, "My ID: 0%x\n", 1 );
-            chThdSleepMilliseconds( 250 );
-        }
-        else
-        {
-            chThdSleepSeconds(1);
-        }
+        chprintf( debug_str, "ID: %x\n", id );
 
-
-
+        chThdSleepMilliseconds( 500 );
     }
 }

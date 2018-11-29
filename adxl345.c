@@ -16,12 +16,14 @@ uint8_t adxl345_get_self_id( void )
     if ( !m_i2c )
         return 0;
 
-    uint8_t result = i2c_read_byte( m_i2c, ADXL345_ADDR, 0x00 );
+    uint8_t data[2];
+
+    i2c_read_bytes( m_i2c, ADXL345_ADDR, 0x00, 2, data );
 
     if ( i2c_get_errno( m_i2c ) != EOK )
     {
         return 0;
     }
 
-    return result;
+    return data[0];
 }
