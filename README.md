@@ -1,8 +1,8 @@
-# Template of Eclipse project for STM32F10C8T6 board with ChibiOS
+# IMU sensors global project adapted for STM32F103C8T6 uC
 
 ### TARGET
 
-The template runs on an STM32F10C8T6 board.
+The template runs on an STM32F103C8T6 board.
 
 ### Useful links
 
@@ -13,14 +13,11 @@ The template runs on an STM32F10C8T6 board.
 * [Alternate functions](https://www.st.com/resource/en/datasheet/cd00161566.pdf#page=28)
 * [Pins assignment (+analogs)](https://www.st.com/resource/en/datasheet/cd00161566.pdf#page=28)
 
+### Структура
 
-### Notes
+Проект включает в себя реализация аппаратной части и протоколы работы с датчиками. Папка `sensors` содержит модули реализации работы с датчиками, папка `sensors/public` должна содержать заголовочные файлы, которые имеют конечные прототипы функций для использования. Внутри папки `sensors` можно использовать закрытые заголовочные файлы, которые содержат информацию о регистрах, структуры и т.д.
 
-The template is based on the ChibiOS/RT demos for STM32F10C8T6-Maplemini
+Файл `ch_hw.c` содержит реализацию функций, которые используются в модулях AHRS.
 
-Some files used by the demo are not part of ChibiOS/RT but are copyright of
-ST Microelectronics and are licensed under a different license.
-Also note that not all the files present in the ST library are distributed
-with ChibiOS/RT, you can find the whole library on the ST web site:
+Файл `sensors/hardware.h` содержит прототипы используемых в AHRS функций. Они должны быть реализованы на аппаратной стороне проекта.
 
-http://www.st.com

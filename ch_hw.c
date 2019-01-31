@@ -1,13 +1,48 @@
-#include <i2c_interface.h>
+#include <ch_hw.h>
 
 #include <string.h>
-#include <hal.h>
 
-/*** System dependent module ***/
+#include <usbcfg.h>
+#include <chprintf.h>
 
-extern BaseSequentialStream    *debug_str;
+/*** Delay module ***/
 
-#define delay_ms(x) (chThdSleepMilliseconds((x)))
+void delay_ms( uint32_t msec )
+{
+    chThdSleepMilliseconds( msec );
+}
+
+/*** Debug module ***/
+
+BaseSequentialStream    *debug_str          = (BaseSequentialStream *)&SDU1;
+bool                    debug_initialized   = false;
+
+void debug_stream_init( void )
+{
+    /* Serial over USB setup */
+    sduObjectInit( &SDU1 );
+    sduStart( &SDU1, &serusbcfg );
+
+    usbDisconnectBus( serusbcfg.usbp );
+    chThdSleepMilliseconds( 1500 );
+    usbStart( serusbcfg.usbp, &usbcfg );
+    usbConnectBus( serusbcfg.usbp );
+
+    debug_initialized = true;
+}
+
+void dbgprintf( const char* format, ... )
+{
+    if ( !debug_initialized )
+        return;
+
+    va_list ap;
+    va_start(ap, format);
+    chvprintf(debug_str, format, ap);
+    va_end(ap);
+}
+
+/*** I2C module ***/
 
 int i2c_get_errno( i2c_module_t p_module )
 {
@@ -21,14 +56,23 @@ int i2c_get_errno( i2c_module_t p_module )
     return EOK;
 }
 
+static const I2CConfig i2cfg1 = {
+    OPMODE_I2C,
+    400000,
+    FAST_DUTY_CYCLE_2,
+};
+
 i2c_module_t i2c_init( I2CDriver *dr )
 {
+    i2cStart( dr, &i2cfg1 );
+
     return dr;
 }
 
-void i2c_free( void )
+void i2c_free( i2c_module_t p_module )
 {
-
+    /* Just to avoid warnings */
+    p_module = p_module;
 }
 
 int i2c_write_bytes( i2c_module_t p_module, uint8_t i2c_address, uint8_t reg_addr, uint8_t size, uint8_t *data )
@@ -85,13 +129,15 @@ int i2c_write_word  ( i2c_module_t p_module, uint8_t i2c_address, uint8_t reg_ad
 
 uint8_t i2c_read_byte( i2c_module_t p_module, uint8_t i2c_address, uint8_t reg_addr )
 {
-    uint8_t data;
-    if ( i2c_read_bytes( p_module, i2c_address, reg_addr, 1, &data ) != EOK )
+    /* STM32 Errata - read only by two bytes */
+    uint8_t data[2];
+
+    if ( i2c_read_bytes( p_module, i2c_address, reg_addr, 2, data ) != EOK )
     {
         return 0;
     }
 
-    return data;
+    return data[0];
 }
 
 int i2c_write_bits( i2c_module_t p_module, uint8_t i2c_address, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data )
