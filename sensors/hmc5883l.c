@@ -16,7 +16,7 @@ static int16_t          g_offset_x = 0,
 static int32_t          sin_angle_offset_rad = 0,
                         cos_angle_offset_rad = MATH_MULTIPLYER;
              
-static bool             initialized 	= false;
+static bool             initialized 	= 1;
        
 static i2c_module_t		m_i2c_module 	= NULL;
 static hmc5883l_data_t  m_data;
@@ -29,15 +29,15 @@ int hmc5883l_init ( i2c_module_t p_i2c, int16_t offset_x, int16_t offset_y )
 {
    	m_i2c_module  = p_i2c;
     
-    if ( !hmc5883l_test_connection() )
-    {
-        dbgprintf( "[%s]: Test connection failed\n", __FUNCTION__ );
-        return -1;
-    }
-    
-    hmc5883l_set_output_rate( HMC5883_OUTPUT_RATE_75 );
-    hmc5883l_set_averaged_samples( HMC5883_AVERAGED_SAMPLES_2 );
-    hmc5883l_set_magnetic_gain( HMC5883l_MAGGAIN_0_88 );
+//    if ( !hmc5883l_test_connection() )
+//    {
+//        dbgprintf( "[%s]: Test connection failed\n", __FUNCTION__ );
+//        return -1;
+//    }
+
+//    hmc5883l_set_output_rate( HMC5883_OUTPUT_RATE_75 );
+//    hmc5883l_set_averaged_samples( HMC5883_AVERAGED_SAMPLES_2 );
+//    hmc5883l_set_magnetic_gain( HMC5883l_MAGGAIN_0_88 );
     hmc5883l_set_continious_operating_mode();
     
     g_offset_x = offset_x;
@@ -104,7 +104,11 @@ static bool hmc5883l_test_connection( void )
 
 void hmc5883l_set_continious_operating_mode ( void )
 {
+//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x00, 0x71 );
+//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x01, 0xA0 );
+//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x02, 0x00 );
     i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, HMC5883_REGISTER_MAG_MR_REG_M, HMC5883_OPERATING_MODE_CONTINIOUS );
+//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, HMC5883_REGISTER_MAG_CRA_REG_M, 0x10 );
 }
 
 void hmc5883l_set_magnetic_gain ( Hmc5883l_mag_gain_t gain )
@@ -169,11 +173,13 @@ static int8_t hmc5883l_receive_mag_raw_data ( void )
     SWAP( raw_magnetic.reg.y_mag_h, raw_magnetic.reg.y_mag_l );
     SWAP( raw_magnetic.reg.z_mag_h, raw_magnetic.reg.z_mag_l );
     
-    raw_magnetic.value.x_magnet -= g_offset_x;
-    raw_magnetic.value.y_magnet -= g_offset_y;
+
+    //raw_magnetic.value.x_magnet -= g_offset_x;
+    //raw_magnetic.value.y_magnet -= g_offset_y;
     // Inversed for correct direction of axis Z
-    raw_magnetic.value.y_magnet *= -1;
     
+    //raw_magnetic.value.y_magnet *= -1;
+
     return( 0 );
 }
 
@@ -205,10 +211,10 @@ void hmc5883l_make_calibration ( uint32_t calibration_times )
     while ( calibration_times-- )
     {
         hmc5883l_receive_mag_raw_data();
-        x_mag_max = max( x_mag_max, raw_magnetic.value.x_magnet );
-        x_mag_min = min( x_mag_min, raw_magnetic.value.x_magnet );
-        y_mag_max = max( y_mag_max, raw_magnetic.value.y_magnet );
-        y_mag_min = min( y_mag_min, raw_magnetic.value.y_magnet );
+        x_mag_max = fmax( x_mag_max, raw_magnetic.value.x_magnet );
+        x_mag_min = fmin( x_mag_min, raw_magnetic.value.x_magnet );
+        y_mag_max = fmax( y_mag_max, raw_magnetic.value.y_magnet );
+        y_mag_min = fmin( y_mag_min, raw_magnetic.value.y_magnet );
         delay_ms( 50 );
     }
     
@@ -218,3 +224,21 @@ void hmc5883l_make_calibration ( uint32_t calibration_times )
     
     while ( 1 );
 }
+
+uint8_t hmc5883_get_reg( uint8_t addres_reg_hmc5883 )
+{
+    if ( !m_i2c_module )
+        return 0;
+
+    uint8_t id = i2c_read_byte( m_i2c_module, HMC5883_ADDRESS, addres_reg_hmc5883 ); // need address
+
+    if ( i2c_get_errno( m_i2c_module ) != EOK )
+    {
+        return 0;
+    }
+
+    return id;
+}
+
+
+

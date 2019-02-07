@@ -62,7 +62,7 @@ typedef union
 
 #define HMC5883_MEASUREMENT_MODE_NORMAL         0b00
 
-#define HMC5883_OPERATING_MODE_CONTINIOUS       0b00
+#define HMC5883_OPERATING_MODE_CONTINIOUS       0b00 ///fix this
 
 /* Configuration register B */
 
