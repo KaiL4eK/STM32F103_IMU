@@ -43,6 +43,7 @@ typedef enum
 
 void hmc5883l_set_output_rate ( Hmc5883l_output_rate_t rate );
 
+uint8_t hmc5883_get_reg( uint8_t addres_reg_hmc5883 );
 typedef enum
 {
     HMC5883l_MAGGAIN_0_88           = 0b000,  // +/- 0.88

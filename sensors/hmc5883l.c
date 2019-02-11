@@ -104,7 +104,7 @@ static bool hmc5883l_test_connection( void )
 
 void hmc5883l_set_continious_operating_mode ( void )
 {
-//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x00, 0x71 );
+//    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x00, 0x70);
 //    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x01, 0xA0 );
 //    i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, 0x02, 0x00 );
     i2c_write_byte( m_i2c_module, HMC5883_ADDRESS, HMC5883_REGISTER_MAG_MR_REG_M, HMC5883_OPERATING_MODE_CONTINIOUS );
