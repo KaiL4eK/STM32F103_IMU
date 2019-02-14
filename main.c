@@ -17,22 +17,33 @@ int main(void)
     debug_stream_init();
     int x_in;
     int y_in;
-    int16_t x_value;
-    int16_t y_value;
-    int16_t z_value;
+    float x_value;
+    float y_value;
+    float z_value;
 
 
-    float x_bias =25.666091;
-    float y_bias =45.694381;
-    float z_bias =19.796037;
+    float x_bias =13.583052;
+    float y_bias =-6.090640;
+    float z_bias =-56.473310;
 
-    //float x_scale = 1.1158392;
-    //float y_scale = 0.8961;
+    double bias[3] =
+    {
+     13.583052,
+     -6.090640,
+     -56.473310
+    };
 
+    double calibration_matrix[3][3]=
+    {
+     {1.009434, 0.000136, -0.076213},
+     {0.000136, 1.014606, -0.069870},
+     {-0.076213, -0.069870, 0.963730}
+    };
 
-
-
-
+    float uncalibrated_values[3] = {0,0,0};
+//
+//
+    float calibrated_values[3] = {0,0,0};
     /* For LED control */
     palSetPadMode( GPIOC, 13, PAL_MODE_OUTPUT_PUSHPULL );
 
@@ -54,7 +65,7 @@ int main(void)
 //    uint8_t Reg_A_conf = hmc5883_get_reg( 0x00 );
 //    uint8_t Reg_B_conf = hmc5883_get_reg( 0x01 );
 //    uint8_t Reg_mode = hmc5883_get_reg( 0x02 );
-
+    int value = 0;
 
     while (true)
     {
@@ -80,43 +91,67 @@ int main(void)
 //        }
 
         chThdSleepMilliseconds( 500 );
-        x_value = hmc_5883->x_magnet;
-        y_value = hmc_5883->y_magnet;
-        z_value = hmc_5883->z_magnet;
+        x_value = (float)hmc_5883->x_magnet;
+        y_value = (float)hmc_5883->y_magnet;
+        z_value = (float)hmc_5883->z_magnet;
 
-        float x=x_value - x_bias;
-        float y=y_value - y_bias;
+//        float calib_x = x_value - x_bias;
+//        float calib_y = y_value - y_bias;
 
-        //x = x * x_scale;
-        //y = y * y_scale;
-
-
-        angle = atan2((double)y,(double)x);
-        angle = angle * 180/3.14159265;
-        angle = angle +180;
+        uncalibrated_values[0] =x_value;
+        uncalibrated_values[1] =y_value;
+        uncalibrated_values[2] =z_value;
 
 
+        for (int i=0; i<3; ++i) uncalibrated_values[i] = uncalibrated_values[i] - bias[i];
+        float result[3] = {0, 0, 0};
 
-//        dbgprintf( "ID_adxl345: %x\n", id );
-//        dbgprintf( "Reg_A_hmc5883: %x\n", Reg_A );
-//        dbgprintf( "Reg_B_hmc5883: %x\n", Reg_B );
-//        dbgprintf( "Reg_C_hmc5883: %x\n", Reg_C );
+        for (int i=0; i<3; ++i)
+          {
+            for (int j=0; j<3; ++j)
+            {
+              result[i] += calibration_matrix[i][j] * uncalibrated_values[j];
+            }
+          }
 
-        dbgprintf( "x_value_hmc5883: %d\n", x_value );
-        dbgprintf( "y_value_hmc5883: %d\n", y_value );
-        dbgprintf( "z_value_hmc5883: %d\n", z_value );
+        for (int i=0; i<3; ++i) calibrated_values[i] = result[i];
 
-        dbgprintf( "Reg_A_conf_hmc5883: %x\n", Reg_A_conf );
-        dbgprintf( "Reg_B_conf_hmc5883: %x\n", Reg_B_conf );
-        dbgprintf( "Reg_mode_hmc5883: %x\n", Reg_mode );
+        angle = atan2((double)calibrated_values[1],(double)calibrated_values[0]);
 
+        if(x_value<0)
+        {
+          value = 180-angle*180/3,14159265;
+        }
 
+        else if(x_value>0)
+        {
+          if(y_value<0)
+          {
+            value = angle*180/3,14159265;
+          }
+          else
+          {
+            value = 360-angle*180/3,14159265;
+          }
+        }
+        else
+        {
+          if(y_value<0) value = 90;
+          else value = 270;
+        }
 
-        dbgprintf( "angle1_hmc5883: %d\n", (int)angle );
-        //dbgprintf( "angle_hmc5883: %d\n", y );
+        dbgprintf( "value %d\n",(int)value );
+        msg = sdReadTimeout( comm_dr, rcv_buffer, rcv_bytes, MS2ST( 10 ) );
+
+//        dbgprintf( "%d\t",(int)y_value );
+//        dbgprintf( "%d\n",(int)z_value );
+
+//        dbgprintf( "111x_value %d\n",(int)calib_x );
+//        dbgprintf( "111y_value %d\n",(int)calib_y );
 //
-//        dbgprintf( "Reg_data_test1: %x\n", Reg_data_test1 );
-//        dbgprintf( "Reg_data_test2: %x\n", Reg_data_test2 );
+////
+//        dbgprintf( "angle1_hmc5883: %d\n",(int)angle );
+
 
 
     }
